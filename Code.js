@@ -65,7 +65,18 @@ function doGetOriginal() {
   }
 }
 
-function processAuditData(jsonData) {
+// Get OAuth token for Google Picker
+function getOAuthToken() {
+  DriveApp.getRootFolder(); // This line ensures we have Drive scope
+  return ScriptApp.getOAuthToken();
+}
+
+// Get user's email for Picker configuration
+function getUserEmail() {
+  return Session.getActiveUser().getEmail();
+}
+
+function processAuditData(jsonData, folderId) {
   try {
     // Parse the JSON data
     const data = JSON.parse(jsonData);
@@ -94,10 +105,17 @@ function processAuditData(jsonData) {
     
     let newFile;
     try {
-      newFile = templateFile.makeCopy(newFileName);
+      if (folderId && folderId !== 'root') {
+        // If a specific folder was selected, create the file there
+        const targetFolder = DriveApp.getFolderById(folderId);
+        newFile = templateFile.makeCopy(newFileName, targetFolder);
+      } else {
+        // Otherwise, create in the root folder
+        newFile = templateFile.makeCopy(newFileName);
+      }
     } catch (e) {
       console.error('Error creating copy:', e);
-      throw new Error('Cannot create a copy of the template. Please check Drive permissions.');
+      throw new Error('Cannot create a copy of the template. Please check Drive permissions and folder access.');
     }
     
     // Open the new document

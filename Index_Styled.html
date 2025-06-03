@@ -152,6 +152,22 @@ nil</pre>
               ></textarea>
             </div>
             
+            <!-- Folder Selection -->
+            <div class="form-group">
+              <label for="folderPicker">Save Location</label>
+              <div class="folder-picker-container">
+                <div class="folder-display">
+                  <span class="material-icons">folder</span>
+                  <span id="selectedFolder" class="folder-name">My Drive</span>
+                </div>
+                <button type="button" class="button button-secondary" onclick="window.pickerFunctions.createPicker()">
+                  <span class="material-icons">drive_file_move</span>
+                  Choose Folder
+                </button>
+              </div>
+              <p class="form-helper-text">Select a folder where your audit document will be saved</p>
+            </div>
+            
             <button type="submit" class="button button-primary submit-button">
               <span class="material-icons">task_alt</span>
               Generate Audit Document
@@ -372,6 +388,10 @@ nil`;
           return;
         }
         
+        // Get selected folder
+        const selectedFolder = window.pickerFunctions.getSelectedFolder();
+        const folderId = selectedFolder.id || null;
+        
         // Show loading
         showLoading(true);
         hideMessages();
@@ -388,7 +408,7 @@ nil`;
             showLoading(false);
             showMessage('Error: ' + error.message, 'error');
           })
-          .processAuditData(jsonData);
+          .processAuditData(jsonData, folderId);
       }
       
       // Show/hide loading
@@ -454,6 +474,13 @@ nil`;
         };
         return text.replace(/[&<>"']/g, m => map[m]);
       }
+      
+      // Initialize Google Picker API when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.pickerFunctions) {
+          window.pickerFunctions.initGoogleApi();
+        }
+      });
     </script>
   </body>
 </html>

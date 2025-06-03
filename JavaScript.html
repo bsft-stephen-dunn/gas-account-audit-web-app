@@ -84,6 +84,79 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// Google Picker functionality
+let pickerApiLoaded = false;
+let oauthToken;
+let selectedFolderId = null;
+let selectedFolderName = 'My Drive';
+
+// Load the Google Picker API
+function loadPicker() {
+  gapi.load('picker', {'callback': onPickerApiLoad});
+}
+
+function onPickerApiLoad() {
+  pickerApiLoaded = true;
+}
+
+// Create and display the folder picker
+function createPicker() {
+  if (pickerApiLoaded && oauthToken) {
+    const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+      .setSelectFolderEnabled(true)
+      .setIncludeFolders(true);
+
+    const picker = new google.picker.PickerBuilder()
+      .addView(view)
+      .setOAuthToken(oauthToken)
+      .setCallback(pickerCallback)
+      .setTitle('Select a folder to save your audit document')
+      .build();
+    picker.setVisible(true);
+  } else {
+    // Get OAuth token from server
+    google.script.run
+      .withSuccessHandler(function(token) {
+        oauthToken = token;
+        createPicker();
+      })
+      .withFailureHandler(function(error) {
+        console.error('Error getting OAuth token:', error);
+        showMessage('Error loading folder picker. Documents will be saved to My Drive.', 'error');
+      })
+      .getOAuthToken();
+  }
+}
+
+// Handle picker selection
+function pickerCallback(data) {
+  if (data.action === google.picker.Action.PICKED) {
+    const doc = data.docs[0];
+    selectedFolderId = doc.id;
+    selectedFolderName = doc.name;
+    
+    // Update UI to show selected folder
+    const folderDisplay = document.getElementById('selectedFolder');
+    if (folderDisplay) {
+      folderDisplay.textContent = selectedFolderName;
+      folderDisplay.classList.add('folder-selected');
+    }
+    
+    // Show success message
+    showSnackbar(`Folder selected: ${selectedFolderName}`);
+  }
+}
+
+// Initialize Google API
+function initGoogleApi() {
+  // Load the Google API
+  const script = document.createElement('script');
+  script.src = 'https://apis.google.com/js/api.js?onload=loadPicker';
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+}
+
 // Export functions for use in main script
 window.utilityFunctions = {
   formatDate,
@@ -92,5 +165,12 @@ window.utilityFunctions = {
   autoResizeTextarea,
   isGoogleAppsScript,
   safeLog
+};
+
+// Export picker functions
+window.pickerFunctions = {
+  initGoogleApi,
+  createPicker,
+  getSelectedFolder: () => ({ id: selectedFolderId, name: selectedFolderName })
 };
 </script>
