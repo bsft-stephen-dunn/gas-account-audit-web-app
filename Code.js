@@ -175,7 +175,7 @@ function processAuditData(jsonData, folderId) {
     const data = JSON.parse(jsonData);
     
     // Template configuration
-    const templateId = '1Ij4vM7EBqTxJ-TOiHNiWlRUiC-Hf2S8NU4Gull_jWH0';
+    const templateId = '1nuFFNIv5VpSxpaukasjo-DhhyXsMV-ubio2eqNqlf7Y';
     
     // Check if we have access to DriveApp
     if (!DriveApp) {

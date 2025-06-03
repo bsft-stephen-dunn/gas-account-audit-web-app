@@ -69,7 +69,7 @@
           <p class="mb-2">Enter the site name as it appears in your Blueshift account (e.g., example.com)</p>
           <div class="site-input-group">
             <div class="site-input-field">
-              <input type="text" id="siteName" class="text-input" value="site.com" placeholder="Enter site name..." />
+              <input type="text" id="siteName" class="text-input" value="demo.dunn.com" placeholder="Enter site name..." />
             </div>
             <button id="updateScriptBtn" class="button button-secondary">
               <span class="material-icons">refresh</span>
@@ -89,7 +89,7 @@
             <pre id="rubyScript" class="script-code"># Account Extraction Script - Auto-Execute Version
 # This script will execute as a complete block when pasted into Rails console
 
-site_name = '<span class="highlight">site.com</span>' # UPDATE THIS
+site_name = '<span class="highlight">demo.dunn.com</span>' # UPDATE THIS
 
 # Start extraction
 puts "\n#{'='*80}"
@@ -192,11 +192,11 @@ nil</pre>
     
     <!-- JavaScript -->
     <script>
-      // Full script template (truncated for display)
+      // Full script template (enhanced version with all 19 sections)
       const scriptTemplate = `# Account Extraction Script - Auto-Execute Version
 # This script will execute as a complete block when pasted into Rails console
 
-site_name = '<span class="highlight">site.com</span>' # UPDATE THIS
+site_name = '<span class="highlight">demo.dunn.com</span>' # UPDATE THIS
 
 # Start extraction
 puts "\\n#{'='*80}"
@@ -261,7 +261,412 @@ else
     }
   end
   
-  # [Additional extraction code continues...]
+  # 3. Campaign Configuration
+  account_data[:campaign_configuration] = safe_exec("Campaign configuration") do
+    campaigns = Campaign.where(account_id: account_id)
+    stats = {
+      total_count: campaigns.count,
+      by_exec_term: campaigns.group(:exec_term).count,
+      by_status: campaigns.group(:status).count,
+      active_campaigns: campaigns.where(status: 'active').count,
+      paused_campaigns: campaigns.where(status: 'paused').count,
+      archived_campaigns: campaigns.where(status: 'archived').count
+    }
+    
+    if campaigns.column_names.include?('is_holdout')
+      stats[:holdout_campaigns] = campaigns.where(is_holdout: true).count
+    else
+      stats[:holdout_campaigns] = 0
+    end
+    
+    stats
+  end
+  
+  # 4. Channel Configuration
+  account_data[:channel_configuration] = safe_exec("Channel configuration") do
+    {
+      email: {
+        enabled: account.allow_channel_email,
+        max_per_day: account.max_email_channel,
+        max_unit: account.max_email_channel_unit
+      },
+      sms: {
+        enabled: account.allow_channel_sms,
+        max_per_day: account.max_sms_channel,
+        max_unit: account.max_sms_channel_unit
+      },
+      push: {
+        enabled: account.allow_channel_push,
+        max_per_day: account.max_push_channel,
+        max_unit: account.max_push_channel_unit
+      },
+      in_app: {
+        enabled: account_attribute.allow_channel_in_app,
+        max_per_day: account_attribute.max_in_app_channel,
+        max_unit: account_attribute.max_in_app_channel_unit
+      },
+      display: {
+        enabled: account.allow_channel_display,
+        max_per_day: account.max_display_channel,
+        max_unit: account.max_display_channel_unit
+      },
+      forms: {
+        enabled: account_attribute.allow_channel_forms
+      },
+      live_content: {
+        enabled: account.allow_channel_onsite
+      },
+      all_channels: {
+        max_per_period: account.max_all_channels,
+        max_unit: account.max_all_channels_unit
+      }
+    }
+  end
+  
+  # 5. Data Retention
+  account_data[:data_retention] = safe_exec("Data retention") do
+    retention = {}
+    retention[:es_data_retention_in_days] = account_attribute.es_data_retention_in_days
+    retention[:es_data_retention_in_days_raw_events] = account_attribute.es_data_retention_in_days_raw_events if account_attribute.respond_to?(:es_data_retention_in_days_raw_events)
+    retention[:es_data_retention_in_days_product_events] = account_attribute.es_data_retention_in_days_product_events if account_attribute.respond_to?(:es_data_retention_in_days_product_events)
+    retention[:transactions_data_retention_period] = account_attribute.transactions_data_retention_period
+    retention[:cookie_only_user_retention_days] = account_attribute.cookie_only_user_retention_days
+    retention
+  end
+  
+  # 6. Features & Capabilities
+  account_data[:features] = safe_exec("Features") do
+    {
+      # Core Features
+      allow_feature_api: account.allow_feature_api,
+      allow_feature_segmentation: account.allow_feature_segmentation,
+      allow_feature_personalization: account.allow_feature_personalization,
+      allow_feature_predictive: account.allow_feature_predictive,
+      allow_feature_promotions: account.allow_feature_promotions,
+      allow_feature_shared_assets: account_attribute.allow_shared_assets,
+      
+      # Advanced Features
+      allow_personalization_studio: account.allow_personalization_studio,
+      allow_predictive_affinities: account_attribute.allow_predictive_affinities,
+      allow_segment_precompute: account.allow_segment_precompute,
+      allow_bypassing_dedupe_check: account_attribute.allow_bypassing_dedupe_check,
+      
+      # Channel Features
+      allow_channel_cloud_app: account.allow_channel_display,
+      allow_channel_email: account.allow_channel_email,
+      allow_channel_forms: account_attribute.allow_channel_forms,
+      allow_channel_in_app: account_attribute.allow_channel_in_app,
+      allow_channel_live_content: account.allow_channel_onsite,
+      allow_channel_push: account.allow_channel_push,
+      allow_channel_sms: account.allow_channel_sms,
+      
+      # Enablement Flags
+      enable_catalogs: account_attribute.enable_catalogs,
+      enable_customer_groups: account_attribute.enable_customer_groups,
+      enable_event_verification: account_attribute.enable_event_verification,
+      enable_external_fetch: account_attribute.enable_external_fetch,
+      enable_global_holdout: account_attribute.enable_global_holdout,
+      enable_holdouts: account_attribute.enable_holdouts,
+      enable_interests: account_attribute.enable_interests,
+      enable_predictive_studio: account_attribute.enable_predictive_studio,
+      enable_recommendations_v2: account_attribute.enable_recommendations_v2,
+      enable_segment_prioritization: account_attribute.enable_segment_prioritization,
+      enable_send_time_optimization: account_attribute.enable_send_time_optimization,
+      enable_syndication: account_attribute.enable_syndication,
+      enable_anniversaries: account_attribute.enable_anniversaries,
+      enable_autocomplete: account_attribute.enable_autocomplete,
+      
+      # Other
+      catalog_activity_enabled: account.catalog_activity_enabled,
+      anniversary_attributes_mapping: account_attribute.anniversary_attributes_mapping,
+      event_verification_list: account_attribute.event_verification_list
+    }
+  end
+  
+  # 7. Integration Settings
+  account_data[:integration_settings] = safe_exec("Integration settings") do
+    integrations = IntegrationSetting.where(account_id: account_id)
+    
+    int_list = integrations.map do |i|
+      {
+        name: i.respond_to?(:integration_type) ? i.integration_type : i.name,
+        status: i.is_active ? 'active' : 'inactive',
+        integration_type: i.respond_to?(:integration_type) ? i.integration_type : i.name
+      }
+    end
+    
+    fb_int = integrations.find_by(integration_type: 'facebook') || integrations.find_by(name: 'facebook')
+    g_int = integrations.find_by(integration_type: 'google') || integrations.find_by(name: 'google')
+    
+    webhook = Webhook.find_by(account_id: account_id) rescue nil
+    
+    {
+      total_integrations: integrations.count,
+      integrations_list: int_list,
+      facebook_status: fb_int ? (fb_int.is_active ? 'active' : 'inactive') : 'not_configured',
+      google_status: g_int ? (g_int.is_active ? 'active' : 'inactive') : 'not_configured',
+      webhook_configured: webhook.present?,
+      s3_credentials: {
+        configured: account_attribute.s3_credentials.present?,
+        access_key: account_attribute.s3_credentials.try(:[], "access_key"),
+        updated_at: account_attribute.s3_credentials.try(:[], "updated_at"),
+        expires_at: account_attribute.s3_credentials.try(:[], "expires_at")
+      }
+    }
+  end
+  
+  # 8. Predictive Features
+  account_data[:predictive_features] = safe_exec("Predictive features") do
+    scores = PredictiveScoreDefinition.where(account_id: account_id)
+    score_list = scores.map do |s|
+      { 
+        name: s.name, 
+        status: s.status,
+        score_type: s.respond_to?(:score_type) ? s.score_type : nil
+      }
+    end
+    
+    {
+      predictive_scores: score_list,
+      predictive_scores_count: scores.count,
+      active_scores: scores.where(status: 'active').count
+    }
+  end
+  
+  # 9. Segmentation Configuration
+  account_data[:segmentation_configuration] = safe_exec("Segmentation configuration") do
+    segments = Segment.where(account_id: account_id)
+    seg_config = { total_segments: segments.count }
+    
+    seg_config[:active_segments] = segments.where(is_active: true).count if segments.column_names.include?('is_active')
+    seg_config[:segments_with_precompute] = segments.where(precompute: true).count if segments.column_names.include?('precompute')
+    
+    seg_config[:max_segment_reference_breadth] = account_attribute.max_segment_reference_breadth
+    seg_config[:max_segment_reference_depth] = account_attribute.max_segment_reference_depth
+    seg_config[:max_prioritized_segments] = account_attribute.max_prioritized_segments
+    seg_config[:segmentation_event_keys_exclude_list] = account_attribute.segmentation_event_keys_exclude_list
+    seg_config[:segmentation_product_attributes_exclude_list] = account_attribute.segmentation_product_attributes_exclude_list
+    seg_config[:segmentation_user_attributes_exclude_list] = account_attribute.segmentation_user_attributes_exclude_list
+    
+    seg_config
+  end
+  
+  # 10. Event Configuration
+  account_data[:event_configuration] = safe_exec("Event configuration") do
+    custom_events = CustomEvent.where(account_id: account_id)
+    event_list = custom_events.first(10).map do |e|
+      {
+        name: e.respond_to?(:event) ? e.event : e.name,
+        event_type: e.event_type,
+        is_active: e.respond_to?(:is_active) ? e.is_active : true
+      }
+    end
+    
+    {
+      custom_events_count: custom_events.count,
+      custom_events_list: event_list,
+      goal_events_whitelist: account.goal_events_whitelist,
+      product_event_whitelist: account.product_event_whitelist,
+      archive_events: account_attribute.archive_events,
+      event_verification_enabled: account_attribute.enable_event_verification,
+      event_verification_list: account_attribute.event_verification_list
+    }
+  end
+  
+  # 11. Attribution & Analytics
+  account_data[:attribution_analytics] = safe_exec("Attribution analytics") do
+    {
+      attribution_days: account.attribution_days,
+      attribution_type: account.attribution_type,
+      dashboard_max_active_users: account_attribute.dashboard_max_active_users,
+      catalog_activity_enabled: account.catalog_activity_enabled
+    }
+  end
+  
+  # 12. Messaging Configuration
+  account_data[:messaging_configuration] = safe_exec("Messaging configuration") do
+    msg_config = {
+      trigger_level_custom_url_params: account_attribute.trigger_level_custom_url_params,
+      allow_bypassing_dedupe_check: account_attribute.allow_bypassing_dedupe_check,
+      max_triggers: account_attribute.max_triggers
+    }
+    
+    begin
+      limits = UserMessageLimitConfig.where(account_id: account_id)
+      msg_config[:messaging_limits] = limits.map do |lim|
+        {
+          channel: lim.channel,
+          limit_type: lim.respond_to?(:limit_type) ? lim.limit_type : nil,
+          max_messages: lim.respond_to?(:max_messages) ? lim.max_messages : nil,
+          time_period: lim.respond_to?(:time_period) ? lim.time_period : nil
+        }
+      end
+    rescue
+      msg_config[:messaging_limits] = []
+    end
+    
+    msg_config
+  end
+  
+  # 13. Recommendation System
+  account_data[:recommendation_system] = safe_exec("Recommendation system") do
+    rec_blocks = RecommendationBlockTheme.where(account_id: account_id)
+    rec_sys = { total_recipes: rec_blocks.count }
+    
+    if rec_blocks.column_names.include?('is_active')
+      rec_sys[:active_recipes] = rec_blocks.where(is_active: true).count
+      rec_sys[:inactive_recipes] = rec_blocks.where(is_active: false).count
+    end
+    
+    rec_sys[:recipes_by_category] = rec_blocks.group(:category).count if rec_blocks.column_names.include?('category')
+    
+    rec_sys[:recipes_detail] = rec_blocks.map do |b|
+      {
+        name: b.name,
+        category: b.respond_to?(:category) ? b.category : nil,
+        is_active: b.respond_to?(:is_active) ? b.is_active : true
+      }
+    end
+    
+    rec_sys
+  end
+  
+  # 14. Transaction Configuration
+  account_data[:transactions] = safe_exec("Transactions") do
+    trans_configs = TransactionConfig.where(account_id: account_id)
+    trans_configs.map do |tc|
+      {
+        description: tc.description,
+        transaction_name: tc.transaction_name,
+        event: tc.event,
+        transaction_id_attributes: tc.transaction_id_attributes,
+        active: tc.active
+      }
+    end
+  end
+  
+  # 15. Autocomplete Configuration
+  account_data[:autocomplete_configuration] = safe_exec("Autocomplete configuration") do
+    auto_config = account_attribute.autocomplete_configuration
+    
+    if auto_config
+      grouped = {
+        'users' => [],
+        'events' => [],
+        'transactions' => []
+      }
+      
+      if auto_config["whitelist"]
+        auto_config["whitelist"].each do |attr|
+          cleaned = attr.split('.').last
+          
+          if attr.start_with?('users.')
+            grouped['users'] << cleaned
+          elsif attr.start_with?('events.')
+            grouped['events'] << cleaned
+          elsif attr.start_with?('transactions.')
+            grouped['transactions'] << cleaned
+          end
+        end
+      end
+      
+      {
+        sampling_rate: auto_config["sampling_rate"],
+        whitelist: grouped,
+        blacklist: auto_config["blacklist"],
+        enabled: auto_config["enabled"]
+      }
+    else
+      nil
+    end
+  end
+  
+  # 16. Limits
+  account_data[:limits] = safe_exec("Limits") do
+    {
+      max_all_channels: account.max_all_channels,
+      max_all_channels_unit: account.max_all_channels_unit,
+      max_display_channel: account.max_display_channel,
+      max_display_channel_unit: account.max_display_channel_unit,
+      max_email_channel: account.max_email_channel,
+      max_email_channel_unit: account.max_email_channel_unit,
+      max_holdout_campaigns: account_attribute.max_holdout_campaigns,
+      max_in_app_channel: account_attribute.max_in_app_channel,
+      max_in_app_channel_unit: account_attribute.max_in_app_channel_unit,
+      max_prioritized_segments: account_attribute.max_prioritized_segments,
+      max_push_channel: account.max_push_channel,
+      max_push_channel_unit: account.max_push_channel_unit,
+      max_segment_reference_breadth: account_attribute.max_segment_reference_breadth,
+      max_segment_reference_depth: account_attribute.max_segment_reference_depth,
+      max_sms_channel: account.max_sms_channel,
+      max_sms_channel_unit: account.max_sms_channel_unit,
+      max_triggers: account_attribute.max_triggers
+    }
+  end
+  
+  # 17. Syndication Settings
+  account_data[:syndication_settings] = safe_exec("Syndication settings") do
+    synd = Syndication.where(account_id: account_id) rescue []
+    synd_config = {
+      syndication_enabled: account_attribute.enable_syndication,
+      total_syndications: synd.count
+    }
+    
+    if synd.any? && synd.first.respond_to?(:is_active)
+      synd_config[:active_syndications] = synd.where(is_active: true).count
+    end
+    
+    if synd.any? && synd.first.respond_to?(:syndication_type)
+      synd_config[:syndication_types] = synd.group(:syndication_type).count
+    end
+    
+    synd_config
+  end
+  
+  # 18. Summary Statistics
+  account_data[:summary_statistics] = safe_exec("Summary statistics") do
+    stats = {}
+    stats[:total_campaigns] = Campaign.where(account_id: account_id).count
+    stats[:total_segments] = Segment.where(account_id: account_id).count
+    stats[:total_templates] = Template.where(account_id: account_id).count rescue 0
+    stats[:total_triggers] = Trigger.joins(bucket: :campaign).where(campaigns: { account_id: account_id }).count rescue 0
+    stats[:total_conditions] = Condition.joins(:segment).where(segments: { account_id: account_id }).count rescue 0
+    stats[:total_users] = User.joins(:user_accounts).where(user_accounts: { account_id: account_id }).count
+    stats[:total_catalogs] = Catalog.where(account_id: account_id).count rescue 0
+    stats[:total_custom_events] = CustomEvent.where(account_id: account_id).count
+    stats
+  end
+  
+  # 19. Account Configuration
+  account_data[:account_configuration] = safe_exec("Account configuration") do
+    config = {}
+    config[:site] = account.site
+    config[:account_mode] = account.account_mode
+    config[:archive_events] = account_attribute.archive_events
+    config[:attribution_days] = account.attribution_days
+    config[:attribution_type] = account.attribution_type
+    config[:currency_type] = account.currency_type
+    config[:dashboard_max_active_users] = account_attribute.dashboard_max_active_users
+    config[:goal_events_whitelist] = account.goal_events_whitelist
+    config[:product_event_whitelist] = account.product_event_whitelist
+    config[:segmentation_event_keys_exclude_list] = account_attribute.segmentation_event_keys_exclude_list
+    config[:segmentation_product_attributes_exclude_list] = account_attribute.segmentation_product_attributes_exclude_list
+    config[:segmentation_user_attributes_exclude_list] = account_attribute.segmentation_user_attributes_exclude_list
+    config[:s3_credentials_access_key] = account_attribute.s3_credentials["access_key"] if account_attribute.s3_credentials
+    config[:s3_credentials_updated_at] = account_attribute.s3_credentials["updated_at"] if account_attribute.s3_credentials
+    config[:s3_credentials_expires_at] = account_attribute.s3_credentials["expires_at"] if account_attribute.s3_credentials
+    config[:timezone] = account.timezone
+    config[:trigger_level_custom_url_params] = account_attribute.trigger_level_custom_url_params
+    config
+  end
+  
+  # Additional data for backward compatibility
+  account_data[:campaign_counts] = account_data[:campaign_configuration]
+  account_data[:recommendation_recipes] = {
+    count: account_data[:recommendation_system][:total_recipes],
+    data: account_data[:recommendation_system][:recipes_detail]
+  }
+  account_data[:predictive_scores] = account_data[:predictive_features][:predictive_scores]
   
   # Output results
   json_output = JSON.pretty_generate(account_data)
@@ -274,7 +679,7 @@ else
   puts "#{'='*80}"
 end
 
-# End of script
+# End of script - this ensures block execution
 nil`;
       
       // Initialize
