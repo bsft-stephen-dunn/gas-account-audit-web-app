@@ -65,7 +65,7 @@ function doGetOriginal() {
   }
 }
 
-function processAuditData(jsonData, athenaData) {
+function processAuditData(jsonData) {
   try {
     // Parse the JSON data
     const data = JSON.parse(jsonData);
@@ -112,7 +112,7 @@ function processAuditData(jsonData, athenaData) {
     const body = doc.getBody();
     
     // Process all replacements
-    const { textReplacements, tableReplacements } = processDocumentReplacements(data, athenaData);
+    const { textReplacements, tableReplacements } = processDocumentReplacements(data);
     
     // Apply text replacements first
     let replacementCount = 0;
@@ -194,7 +194,7 @@ function replaceTextWithTable(body, searchText, tableData) {
   }
 }
 
-function processDocumentReplacements(data, athenaData) {
+function processDocumentReplacements(data) {
   const textReplacements = {};
   const tableReplacements = {};
   

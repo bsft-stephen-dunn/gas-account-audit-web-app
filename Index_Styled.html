@@ -58,7 +58,6 @@
               <li>The script will execute automatically and output JSON data</li>
               <li>Copy the JSON output that appears after "EXTRACTION COMPLETE"</li>
               <li>Paste the JSON output in the Rails Extraction field below</li>
-              <li>Optionally, paste Athena query results in the second field</li>
               <li>Click "Generate Audit Document"</li>
             </ol>
           </div>
@@ -70,7 +69,7 @@
           <p class="mb-2">Enter the site name as it appears in your Blueshift account (e.g., example.com)</p>
           <div class="site-input-group">
             <div class="site-input-field">
-              <input type="text" id="siteName" class="text-input" value="smartasset.com" placeholder="Enter site name..." />
+              <input type="text" id="siteName" class="text-input" value="site.com" placeholder="Enter site name..." />
             </div>
             <button id="updateScriptBtn" class="button button-secondary">
               <span class="material-icons">refresh</span>
@@ -90,7 +89,7 @@
             <pre id="rubyScript" class="script-code"># Account Extraction Script - Auto-Execute Version
 # This script will execute as a complete block when pasted into Rails console
 
-site_name = '<span class="highlight">smartasset.com</span>' # UPDATE THIS
+site_name = '<span class="highlight">site.com</span>' # UPDATE THIS
 
 # Start extraction
 puts "\n#{'='*80}"
@@ -153,16 +152,6 @@ nil</pre>
               ></textarea>
             </div>
             
-            <div class="form-group">
-              <label for="athenaData">Athena Query Results (Optional)</label>
-              <textarea 
-                id="athenaData" 
-                class="textarea-input" 
-                placeholder="Paste your Athena query results here (optional)..."
-                rows="6"
-              ></textarea>
-            </div>
-            
             <button type="submit" class="button button-primary submit-button">
               <span class="material-icons">task_alt</span>
               Generate Audit Document
@@ -191,7 +180,7 @@ nil</pre>
       const scriptTemplate = `# Account Extraction Script - Auto-Execute Version
 # This script will execute as a complete block when pasted into Rails console
 
-site_name = '<span class="highlight">smartasset.com</span>' # UPDATE THIS
+site_name = '<span class="highlight">site.com</span>' # UPDATE THIS
 
 # Start extraction
 puts "\\n#{'='*80}"
@@ -374,7 +363,6 @@ nil`;
         e.preventDefault();
         
         const jsonData = document.getElementById('jsonData').value;
-        const athenaData = document.getElementById('athenaData').value;
         
         // Validate JSON
         try {
@@ -395,13 +383,12 @@ nil`;
             showMessage(result, 'success');
             // Clear form
             document.getElementById('jsonData').value = '';
-            document.getElementById('athenaData').value = '';
           })
           .withFailureHandler(function(error) {
             showLoading(false);
             showMessage('Error: ' + error.message, 'error');
           })
-          .processAuditData(jsonData, athenaData);
+          .processAuditData(jsonData);
       }
       
       // Show/hide loading

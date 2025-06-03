@@ -1,11 +1,11 @@
 # Account Audit Web App
 
-A Google Apps Script web application for generating comprehensive account audit documents for Blueshift accounts. This tool streamlines the process of extracting and formatting account configuration data from Rails console and Athena queries.
+A Google Apps Script web application for generating comprehensive account audit documents for Blueshift accounts. This tool streamlines the process of extracting and formatting account configuration data from Rails console.
 
 ## 🚀 Features
 
 - **Automated Script Generation**: Dynamically generates Rails extraction scripts based on the provided site name
-- **JSON Data Processing**: Processes complex nested JSON structures from Rails and Athena outputs
+- **JSON Data Processing**: Processes complex nested JSON structures from Rails console outputs
 - **Document Generation**: Creates formatted Google Docs with comprehensive account audit information
 - **Dark Mode Support**: Toggle between light and dark themes for comfortable viewing
 - **Mobile Responsive**: Optimized for both desktop and mobile devices
@@ -15,7 +15,6 @@ A Google Apps Script web application for generating comprehensive account audit 
 
 - Google Account with access to Google Apps Script
 - Access to Blueshift Rails console
-- (Optional) Access to Athena for additional query data
 
 ## 🛠️ Installation
 
@@ -74,10 +73,9 @@ clasp deploy
 
 ### Step 3: Generate Audit Document
 1. Paste the Rails JSON output in the "Rails Extraction Data" field
-2. (Optional) Paste Athena query results in the "Athena Query Results" field
-3. Click "Generate Audit Document"
-4. The app will create a Google Doc with the formatted audit information
-5. A link to the document will be provided upon completion
+2. Click "Generate Audit Document"
+3. The app will create a Google Doc with the formatted audit information
+4. A link to the document will be provided upon completion
 
 ## 🏗️ Project Structure
 
