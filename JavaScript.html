@@ -1,0 +1,96 @@
+<script>
+// Additional JavaScript functions that can be included if needed
+
+// Format date to readable string
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+// Format number with commas
+function formatNumber(num) {
+  if (num === null || num === undefined) return 'N/A';
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// Debounce function for input events
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Auto-resize textarea
+function autoResizeTextarea(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+// Initialize auto-resize for all textareas
+document.addEventListener('DOMContentLoaded', function() {
+  const textareas = document.querySelectorAll('.textarea-input');
+  textareas.forEach(textarea => {
+    // Set initial height
+    autoResizeTextarea(textarea);
+    
+    // Add event listener for input
+    textarea.addEventListener('input', function() {
+      autoResizeTextarea(this);
+    });
+  });
+});
+
+// Check if running in Google Apps Script environment
+function isGoogleAppsScript() {
+  return typeof google !== 'undefined' && google.script && google.script.run;
+}
+
+// Safe console log that works in GAS
+function safeLog(...args) {
+  if (typeof console !== 'undefined' && console.log) {
+    console.log(...args);
+  }
+}
+
+// Handle keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  // Ctrl/Cmd + Enter to submit form
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    const activeElement = document.activeElement;
+    if (activeElement && activeElement.form) {
+      activeElement.form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  }
+  
+  // Ctrl/Cmd + K to focus search/site input
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    const siteInput = document.getElementById('siteName');
+    if (siteInput) {
+      siteInput.focus();
+      siteInput.select();
+    }
+  }
+});
+
+// Export functions for use in main script
+window.utilityFunctions = {
+  formatDate,
+  formatNumber,
+  debounce,
+  autoResizeTextarea,
+  isGoogleAppsScript,
+  safeLog
+};
+</script>

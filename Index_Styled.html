@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Audit Generator</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Include CSS -->
+    <?!= include('Stylesheet'); ?>
+    
+    <!-- Include JavaScript Utilities (optional) -->
+    <?!= include('JavaScript'); ?>
+  </head>
+  
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1 class="header-title">
+            <span class="material-icons">description</span>
+            Account Audit Generator
+          </h1>
+          <div class="header-actions">
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="icon-button" title="Toggle dark mode">
+              <span class="material-icons">brightness_4</span>
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Instructions Card -->
+        <section class="card">
+          <h2 class="section-title">How to Use This Tool</h2>
+          <div class="instructions-list">
+            <ol>
+              <li>Enter the site name below to customize the Rails extraction script</li>
+              <li>Copy the entire script and paste it into Rails console</li>
+              <li>The script will execute automatically and output JSON data</li>
+              <li>Copy the JSON output that appears after "EXTRACTION COMPLETE"</li>
+              <li>Paste the JSON output in the Rails Extraction field below</li>
+              <li>Optionally, paste Athena query results in the second field</li>
+              <li>Click "Generate Audit Document"</li>
+            </ol>
+          </div>
+        </section>
+        
+        <!-- Site Configuration Card -->
+        <section class="card site-input-section">
+          <h2 class="section-title">Step 1: Configure Site Name</h2>
+          <p class="mb-2">Enter the site name as it appears in your Blueshift account (e.g., example.com)</p>
+          <div class="site-input-group">
+            <div class="site-input-field">
+              <input type="text" id="siteName" class="text-input" value="smartasset.com" placeholder="Enter site name..." />
+            </div>
+            <button id="updateScriptBtn" class="button button-secondary">
+              <span class="material-icons">refresh</span>
+              Update Script
+            </button>
+          </div>
+        </section>
+        
+        <!-- Ruby Script Card -->
+        <section class="card ruby-script-section">
+          <h2 class="section-title">Rails Extraction Script</h2>
+          <div class="script-container">
+            <button id="copyScriptBtn" class="button button-accent copy-button">
+              <span class="material-icons">content_copy</span>
+              Copy Script
+            </button>
+            <pre id="rubyScript" class="script-code"># Account Extraction Script - Auto-Execute Version
+# This script will execute as a complete block when pasted into Rails console
+
+site_name = '<span class="highlight">smartasset.com</span>' # UPDATE THIS
+
+# Start extraction
+puts "\n#{'='*80}"
+puts "Starting Account Extraction for: #{site_name}"
+puts "#{'='*80}\n"
+
+account = Account.find_by_site(site_name)
+if account.nil?
+  puts "[ERROR] Account not found for site: #{site_name}"
+else
+  account_id = account.id
+  account_attribute = account.account_attribute
+  
+  # Initialize data collection
+  account_data = {}
+  
+  # Helper for safe execution
+  def safe_exec(desc)
+    begin
+      result = yield
+      puts "[OK] #{desc}"
+      result
+    rescue => e
+      puts "[ERROR] #{desc}: #{e.message}"
+      nil
+    end
+  end
+  
+  # [Rest of the extraction script continues...]
+  # (Full script content will be loaded from scriptTemplate)
+  
+  # Output results
+  json_output = JSON.pretty_generate(account_data)
+  puts "\n#{'='*80}"
+  puts "EXTRACTION COMPLETE"
+  puts "#{'='*80}"
+  puts json_output
+  puts "\n#{'='*80}"
+  puts "Copy the JSON output above and paste it into the web form"
+  puts "#{'='*80}"
+end
+
+# End of script
+nil</pre>
+          </div>
+        </section>
+        
+        <!-- Data Input Form Card -->
+        <section class="card">
+          <h2 class="section-title">Step 2: Paste Extracted Data</h2>
+          <form id="auditForm" class="form-section">
+            <div class="form-group">
+              <label for="jsonData">Rails Extraction JSON Data *</label>
+              <textarea 
+                id="jsonData" 
+                class="textarea-input" 
+                placeholder="Paste your JSON data here..."
+                rows="8"
+                required
+              ></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="athenaData">Athena Query Results (Optional)</label>
+              <textarea 
+                id="athenaData" 
+                class="textarea-input" 
+                placeholder="Paste your Athena query results here (optional)..."
+                rows="6"
+              ></textarea>
+            </div>
+            
+            <button type="submit" class="button button-primary submit-button">
+              <span class="material-icons">task_alt</span>
+              Generate Audit Document
+            </button>
+          </form>
+          
+          <!-- Loading State -->
+          <div id="loadingState" class="loading-container hidden">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Generating document...</p>
+          </div>
+          
+          <!-- Messages -->
+          <div id="errorMessage" class="alert alert-error hidden"></div>
+          <div id="successMessage" class="alert alert-success hidden"></div>
+        </section>
+      </main>
+      
+      <!-- Snackbar for notifications -->
+      <div id="snackbar" class="snackbar"></div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+      // Full script template (truncated for display)
+      const scriptTemplate = `# Account Extraction Script - Auto-Execute Version
+# This script will execute as a complete block when pasted into Rails console
+
+site_name = '<span class="highlight">smartasset.com</span>' # UPDATE THIS
+
+# Start extraction
+puts "\\n#{'='*80}"
+puts "Starting Account Extraction for: #{site_name}"
+puts "#{'='*80}\\n"
+
+account = Account.find_by_site(site_name)
+if account.nil?
+  puts "[ERROR] Account not found for site: #{site_name}"
+else
+  account_id = account.id
+  account_attribute = account.account_attribute
+  
+  # Initialize data collection
+  account_data = {}
+  
+  # Helper for safe execution
+  def safe_exec(desc)
+    begin
+      result = yield
+      puts "[OK] #{desc}"
+      result
+    rescue => e
+      puts "[ERROR] #{desc}: #{e.message}"
+      nil
+    end
+  end
+  
+  # 1. Account Overview
+  account_data[:account_overview] = safe_exec("Account overview") do
+    {
+      site: account.site,
+      account_id: account.id,
+      account_mode: account.account_mode,
+      billing_account_id: account.billing_account_id,
+      created_at: account.created_at,
+      timezone: account.timezone,
+      currency_type: account.currency_type
+    }
+  end
+  
+  # 2. User Management
+  account_data[:user_management] = safe_exec("User management") do
+    users = User.joins(:user_accounts).where(user_accounts: { account_id: account_id })
+    users_by_role = users.joins(:role).group('roles.name').count
+    role_details = users.joins(:role).select('roles.name as role_name, users.*').first(10).map do |u|
+      {
+        email: u.email,
+        role: u.role_name,
+        is_active: u.is_active,
+        last_sign_in_at: u.last_sign_in_at,
+        sign_in_count: u.sign_in_count
+      }
+    end
+    
+    {
+      total_users: users.count,
+      active_users_count: users.where(is_active: true).count,
+      inactive_users_count: users.where(is_active: false).count,
+      users_by_role: users_by_role,
+      role_details: role_details
+    }
+  end
+  
+  # [Additional extraction code continues...]
+  
+  # Output results
+  json_output = JSON.pretty_generate(account_data)
+  puts "\\n#{'='*80}"
+  puts "EXTRACTION COMPLETE"
+  puts "#{'='*80}"
+  puts json_output
+  puts "\\n#{'='*80}"
+  puts "Copy the JSON output above and paste it into the web form"
+  puts "#{'='*80}"
+end
+
+# End of script
+nil`;
+      
+      // Initialize
+      document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        loadUserPreferences();
+      });
+      
+      // Set up event listeners
+      function setupEventListeners() {
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        
+        // Update script button
+        document.getElementById('updateScriptBtn').addEventListener('click', updateScript);
+        
+        // Copy script button
+        document.getElementById('copyScriptBtn').addEventListener('click', copyScript);
+        
+        // Form submission
+        document.getElementById('auditForm').addEventListener('submit', handleSubmit);
+        
+        // Enter key on site name input
+        document.getElementById('siteName').addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            updateScript();
+          }
+        });
+      }
+      
+      // Load user preferences
+      function loadUserPreferences() {
+        // Check for saved dark mode preference
+        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (savedDarkMode) {
+          document.body.classList.add('dark-mode');
+          document.querySelector('#themeToggle .material-icons').textContent = 'brightness_7';
+        }
+      }
+      
+      // Toggle dark mode
+      function toggleTheme() {
+        const isDarkMode = document.body.classList.toggle('dark-mode');
+        const icon = document.querySelector('#themeToggle .material-icons');
+        icon.textContent = isDarkMode ? 'brightness_7' : 'brightness_4';
+        
+        // Save preference
+        localStorage.setItem('darkMode', isDarkMode);
+      }
+      
+      // Update script with new site name
+      function updateScript() {
+        const siteName = document.getElementById('siteName').value.trim();
+        
+        if (!siteName) {
+          showMessage('Please enter a site name', 'error');
+          return;
+        }
+        
+        const updatedScript = scriptTemplate.replace(
+          /<span class="highlight">.*?<\/span>/g,
+          '<span class="highlight">' + escapeHtml(siteName) + '</span>'
+        );
+        
+        document.getElementById('rubyScript').innerHTML = updatedScript;
+        showSnackbar('Script updated with new site name');
+      }
+      
+      // Copy script to clipboard
+      function copyScript() {
+        const scriptElement = document.getElementById('rubyScript');
+        const scriptText = scriptElement.textContent || scriptElement.innerText;
+        
+        const textarea = document.createElement('textarea');
+        textarea.value = scriptText;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-999999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+          document.execCommand('copy');
+          showSnackbar('Script copied to clipboard!');
+          
+          // Update button temporarily
+          const btn = document.getElementById('copyScriptBtn');
+          const originalContent = btn.innerHTML;
+          btn.innerHTML = '<span class="material-icons">check</span> Copied!';
+          setTimeout(() => {
+            btn.innerHTML = originalContent;
+          }, 2000);
+        } catch (err) {
+          showMessage('Failed to copy script', 'error');
+        }
+        
+        document.body.removeChild(textarea);
+      }
+      
+      // Handle form submission
+      function handleSubmit(e) {
+        e.preventDefault();
+        
+        const jsonData = document.getElementById('jsonData').value;
+        const athenaData = document.getElementById('athenaData').value;
+        
+        // Validate JSON
+        try {
+          JSON.parse(jsonData);
+        } catch (e) {
+          showMessage('Invalid JSON format. Please check your Rails extraction data.', 'error');
+          return;
+        }
+        
+        // Show loading
+        showLoading(true);
+        hideMessages();
+        
+        // Call server function
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showLoading(false);
+            showMessage(result, 'success');
+            // Clear form
+            document.getElementById('jsonData').value = '';
+            document.getElementById('athenaData').value = '';
+          })
+          .withFailureHandler(function(error) {
+            showLoading(false);
+            showMessage('Error: ' + error.message, 'error');
+          })
+          .processAuditData(jsonData, athenaData);
+      }
+      
+      // Show/hide loading
+      function showLoading(show) {
+        const loadingEl = document.getElementById('loadingState');
+        if (show) {
+          loadingEl.classList.remove('hidden');
+        } else {
+          loadingEl.classList.add('hidden');
+        }
+      }
+      
+      // Show message
+      function showMessage(message, type) {
+        hideMessages();
+        
+        const messageEl = type === 'error' 
+          ? document.getElementById('errorMessage')
+          : document.getElementById('successMessage');
+        
+        // Handle HTML content in success messages
+        if (type === 'success' && message.includes('<a')) {
+          messageEl.innerHTML = '<span class="material-icons">check_circle</span> ' + message;
+        } else {
+          messageEl.innerHTML = '<span class="material-icons">' + 
+            (type === 'error' ? 'error' : 'check_circle') + 
+            '</span> ' + escapeHtml(message);
+        }
+        
+        messageEl.classList.remove('hidden');
+        
+        // Auto-hide after 10 seconds for success, keep errors visible
+        if (type === 'success') {
+          setTimeout(hideMessages, 10000);
+        }
+      }
+      
+      // Hide messages
+      function hideMessages() {
+        document.getElementById('errorMessage').classList.add('hidden');
+        document.getElementById('successMessage').classList.add('hidden');
+      }
+      
+      // Show snackbar
+      function showSnackbar(message, duration = 3000) {
+        const snackbar = document.getElementById('snackbar');
+        snackbar.textContent = message;
+        snackbar.classList.add('show');
+        
+        setTimeout(() => {
+          snackbar.classList.remove('show');
+        }, duration);
+      }
+      
+      // Escape HTML
+      function escapeHtml(text) {
+        const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+      }
+    </script>
+  </body>
+</html>
