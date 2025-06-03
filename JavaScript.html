@@ -101,30 +101,112 @@ function onPickerApiLoad() {
 
 // Create and display the folder picker
 function createPicker() {
-  if (pickerApiLoaded && oauthToken) {
-    const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-      .setSelectFolderEnabled(true)
-      .setIncludeFolders(true);
+  // Try Google Picker first
+  if (typeof google !== 'undefined' && google.picker) {
+    if (pickerApiLoaded && oauthToken) {
+      try {
+        const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+          .setSelectFolderEnabled(true)
+          .setIncludeFolders(true);
 
-    const picker = new google.picker.PickerBuilder()
-      .addView(view)
-      .setOAuthToken(oauthToken)
-      .setCallback(pickerCallback)
-      .setTitle('Select a folder to save your audit document')
-      .build();
-    picker.setVisible(true);
+        const picker = new google.picker.PickerBuilder()
+          .addView(view)
+          .setOAuthToken(oauthToken)
+          .setCallback(pickerCallback)
+          .setTitle('Select a folder to save your audit document')
+          .build();
+        picker.setVisible(true);
+      } catch (e) {
+        console.error('Error creating picker:', e);
+        showFallbackFolderSelector();
+      }
+    } else {
+      // Get OAuth token from server
+      google.script.run
+        .withSuccessHandler(function(token) {
+          oauthToken = token;
+          createPicker();
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error getting OAuth token:', error);
+          showFallbackFolderSelector();
+        })
+        .getOAuthToken();
+    }
   } else {
-    // Get OAuth token from server
-    google.script.run
-      .withSuccessHandler(function(token) {
-        oauthToken = token;
-        createPicker();
-      })
-      .withFailureHandler(function(error) {
-        console.error('Error getting OAuth token:', error);
-        showMessage('Error loading folder picker. Documents will be saved to My Drive.', 'error');
-      })
-      .getOAuthToken();
+    // Google Picker not available, use fallback
+    console.log('Google Picker API not available, using fallback');
+    showFallbackFolderSelector();
+  }
+}
+
+// Fallback folder selector using dropdown
+function showFallbackFolderSelector() {
+  // Show loading state
+  const folderDisplay = document.getElementById('selectedFolder');
+  if (folderDisplay) {
+    folderDisplay.textContent = 'Loading folders...';
+  }
+  
+  // Get folders from server
+  google.script.run
+    .withSuccessHandler(function(folders) {
+      showFolderDialog(folders);
+    })
+    .withFailureHandler(function(error) {
+      console.error('Error loading folders:', error);
+      showMessage('Unable to load folders. Documents will be saved to My Drive.', 'error');
+    })
+    .getUserFolders();
+}
+
+// Show folder selection dialog
+function showFolderDialog(folders) {
+  // Create modal dialog
+  const modal = document.createElement('div');
+  modal.className = 'folder-modal';
+  modal.innerHTML = `
+    <div class="folder-modal-content">
+      <h3>Select a Folder</h3>
+      <div class="folder-select-container">
+        <select id="folderSelect" class="folder-select">
+          ${folders.map(f => `<option value="${f.id}">${f.path}</option>`).join('')}
+        </select>
+      </div>
+      <div class="folder-modal-actions">
+        <button type="button" class="button button-secondary" onclick="closeFolderDialog()">Cancel</button>
+        <button type="button" class="button button-primary" onclick="selectFolder()">Select</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+// Handle folder selection from dialog
+function selectFolder() {
+  const select = document.getElementById('folderSelect');
+  const selectedOption = select.options[select.selectedIndex];
+  
+  selectedFolderId = select.value;
+  selectedFolderName = selectedOption.text.split(' / ').pop();
+  
+  // Update UI
+  const folderDisplay = document.getElementById('selectedFolder');
+  if (folderDisplay) {
+    folderDisplay.textContent = selectedFolderName;
+    folderDisplay.classList.add('folder-selected');
+  }
+  
+  closeFolderDialog();
+  showSnackbar(`Folder selected: ${selectedFolderName}`);
+}
+
+// Close folder dialog
+function closeFolderDialog() {
+  const modal = document.querySelector('.folder-modal');
+  if (modal) {
+    modal.remove();
   }
 }
 

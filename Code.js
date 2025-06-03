@@ -67,13 +67,73 @@ function doGetOriginal() {
 
 // Get OAuth token for Google Picker
 function getOAuthToken() {
-  DriveApp.getRootFolder(); // This line ensures we have Drive scope
-  return ScriptApp.getOAuthToken();
+  try {
+    DriveApp.getRootFolder(); // This line ensures we have Drive scope
+    return ScriptApp.getOAuthToken();
+  } catch (e) {
+    console.error('Error getting OAuth token:', e);
+    throw new Error('Unable to get authorization token. Please ensure you have granted Drive permissions.');
+  }
 }
 
 // Get user's email for Picker configuration
 function getUserEmail() {
   return Session.getActiveUser().getEmail();
+}
+
+// Get list of folders for dropdown selection (fallback method)
+function getUserFolders() {
+  try {
+    const folders = [];
+    const maxFolders = 50; // Limit to prevent timeout
+    
+    // Add root folder option
+    folders.push({
+      id: 'root',
+      name: 'My Drive',
+      path: 'My Drive'
+    });
+    
+    // Get folders from root
+    const rootFolders = DriveApp.getRootFolder().getFolders();
+    let count = 0;
+    
+    while (rootFolders.hasNext() && count < maxFolders) {
+      const folder = rootFolders.next();
+      folders.push({
+        id: folder.getId(),
+        name: folder.getName(),
+        path: 'My Drive / ' + folder.getName()
+      });
+      
+      // Get one level of subfolders
+      const subFolders = folder.getFolders();
+      let subCount = 0;
+      while (subFolders.hasNext() && subCount < 10) {
+        const subFolder = subFolders.next();
+        folders.push({
+          id: subFolder.getId(),
+          name: subFolder.getName(),
+          path: 'My Drive / ' + folder.getName() + ' / ' + subFolder.getName()
+        });
+        subCount++;
+      }
+      
+      count++;
+    }
+    
+    // Sort folders by path
+    folders.sort((a, b) => a.path.localeCompare(b.path));
+    
+    return folders;
+  } catch (e) {
+    console.error('Error getting folders:', e);
+    return [{
+      id: 'root',
+      name: 'My Drive',
+      path: 'My Drive'
+    }];
+  }
 }
 
 function processAuditData(jsonData, folderId) {
