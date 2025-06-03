@@ -3,8 +3,13 @@
   <head>
     <base target="_top">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Audit Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#0066CC">
+    <meta name="description" content="Generate comprehensive account audit documents for Blueshift accounts">
+    <title>Account Audit Generator - Blueshift</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -26,12 +31,16 @@
         <div class="header-content">
           <h1 class="header-title">
             <span class="material-icons">description</span>
-            Account Audit Generator
+            <span class="header-text">Account Audit Generator</span>
           </h1>
           <div class="header-actions">
             <!-- Theme Toggle -->
-            <button id="themeToggle" class="icon-button" title="Toggle dark mode">
+            <button id="themeToggle" class="icon-button" title="Toggle dark mode" aria-label="Toggle dark mode">
               <span class="material-icons">brightness_4</span>
+            </button>
+            <!-- Help Button (mobile) -->
+            <button id="helpToggle" class="icon-button mobile-only" title="Show help" aria-label="Show help">
+              <span class="material-icons">help_outline</span>
             </button>
           </div>
         </div>
