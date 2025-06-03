@@ -463,6 +463,10 @@ nil`;
         }, duration);
       }
       
+      // Make these functions globally accessible
+      window.showMessage = showMessage;
+      window.showSnackbar = showSnackbar;
+      
       // Escape HTML
       function escapeHtml(text) {
         const map = {
@@ -474,6 +478,10 @@ nil`;
         };
         return text.replace(/[&<>"']/g, m => map[m]);
       }
+      
+      // Make functions globally accessible for JavaScript.html
+      window.showMessage = showMessage;
+      window.showSnackbar = showSnackbar;
       
       // Initialize Google Picker API when page loads
       document.addEventListener('DOMContentLoaded', function() {

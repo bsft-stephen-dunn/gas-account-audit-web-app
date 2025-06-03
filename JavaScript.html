@@ -155,7 +155,11 @@ function showFallbackFolderSelector() {
     })
     .withFailureHandler(function(error) {
       console.error('Error loading folders:', error);
-      showMessage('Unable to load folders. Documents will be saved to My Drive.', 'error');
+      if (typeof showMessage !== 'undefined') {
+        showMessage('Unable to load folders. Documents will be saved to My Drive.', 'error');
+      } else {
+        alert('Unable to load folders. Documents will be saved to My Drive.');
+      }
     })
     .getUserFolders();
 }
@@ -199,7 +203,13 @@ function selectFolder() {
   }
   
   closeFolderDialog();
-  showSnackbar(`Folder selected: ${selectedFolderName}`);
+  if (typeof showSnackbar !== 'undefined') {
+    showSnackbar(`Folder selected: ${selectedFolderName}`);
+  } else if (typeof window.showSnackbar !== 'undefined') {
+    window.showSnackbar(`Folder selected: ${selectedFolderName}`);
+  } else {
+    console.log(`Folder selected: ${selectedFolderName}`);
+  }
 }
 
 // Close folder dialog
@@ -225,7 +235,13 @@ function pickerCallback(data) {
     }
     
     // Show success message
-    showSnackbar(`Folder selected: ${selectedFolderName}`);
+    if (typeof showSnackbar !== 'undefined') {
+      showSnackbar(`Folder selected: ${selectedFolderName}`);
+    } else if (typeof window.showSnackbar !== 'undefined') {
+      window.showSnackbar(`Folder selected: ${selectedFolderName}`);
+    } else {
+      console.log(`Folder selected: ${selectedFolderName}`);
+    }
   }
 }
 
@@ -237,6 +253,34 @@ function initGoogleApi() {
   script.async = true;
   script.defer = true;
   document.head.appendChild(script);
+}
+
+// Show snackbar function (for use within picker functions)
+function showSnackbar(message, duration = 3000) {
+  const snackbar = document.getElementById('snackbar');
+  if (snackbar) {
+    snackbar.textContent = message;
+    snackbar.classList.add('show');
+    
+    setTimeout(() => {
+      snackbar.classList.remove('show');
+    }, duration);
+  } else {
+    console.log('Snackbar notification:', message);
+  }
+}
+
+// Show message function (for use within picker functions)
+function showMessage(message, type) {
+  // Try to use the main showMessage function if available
+  if (window.showMessage && typeof window.showMessage === 'function') {
+    window.showMessage(message, type);
+  } else {
+    // Fallback to console
+    console[type === 'error' ? 'error' : 'log'](message);
+    // Also try snackbar
+    showSnackbar(message, type === 'error' ? 5000 : 3000);
+  }
 }
 
 // Export functions for use in main script
@@ -255,4 +299,8 @@ window.pickerFunctions = {
   createPicker,
   getSelectedFolder: () => ({ id: selectedFolderId, name: selectedFolderName })
 };
+
+// Export folder dialog functions to global scope for onclick handlers
+window.closeFolderDialog = closeFolderDialog;
+window.selectFolder = selectFolder;
 </script>
