@@ -59,6 +59,11 @@ clasp deploy
 
 ## 📖 Usage
 
+### Folder Selection Feature
+The app includes a folder picker that lets you choose where to save your audit documents:
+- **Default**: Uses a dropdown menu to select from your Google Drive folders (no setup required)
+- **Optional**: Can use Google's native Picker UI (requires API configuration - see [GOOGLE_PICKER_SETUP.md](GOOGLE_PICKER_SETUP.md))
+
 ### Step 1: Configure Site Name
 1. Open the deployed web app
 2. Enter the site name (e.g., `example.com`) in the input field

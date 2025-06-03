@@ -84,6 +84,21 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// Google Picker Configuration
+// IMPORTANT: To use Google Picker, you must:
+// 1. Enable Google Picker API in Google Cloud Console
+// 2. Create an API Key and restrict it to your domain
+// 3. Get your Google Cloud Project Number (App ID)
+// 4. Replace the values below with your actual credentials
+
+// TODO: Replace these with your actual values from Google Cloud Console
+const GOOGLE_PICKER_CONFIG = {
+  API_KEY: '',  // Your API Key from Google Cloud Console
+  APP_ID: '',   // Your Google Cloud Project Number
+  // Set to true only after you've configured the above values
+  ENABLED: false
+};
+
 // Google Picker functionality
 let pickerApiLoaded = false;
 let oauthToken;
@@ -101,7 +116,14 @@ function onPickerApiLoad() {
 
 // Create and display the folder picker
 function createPicker() {
-  // Try Google Picker first
+  // Check if Google Picker is properly configured
+  if (!GOOGLE_PICKER_CONFIG.ENABLED || !GOOGLE_PICKER_CONFIG.API_KEY || !GOOGLE_PICKER_CONFIG.APP_ID) {
+    console.log('Google Picker not configured, using fallback folder selector');
+    showFallbackFolderSelector();
+    return;
+  }
+  
+  // Try Google Picker if configured
   if (typeof google !== 'undefined' && google.picker) {
     if (pickerApiLoaded && oauthToken) {
       try {
@@ -112,8 +134,11 @@ function createPicker() {
         const picker = new google.picker.PickerBuilder()
           .addView(view)
           .setOAuthToken(oauthToken)
+          .setDeveloperKey(GOOGLE_PICKER_CONFIG.API_KEY)  // Add API Key
+          .setAppId(GOOGLE_PICKER_CONFIG.APP_ID)         // Add App ID
           .setCallback(pickerCallback)
           .setTitle('Select a folder to save your audit document')
+          .setOrigin(window.location.protocol + '//' + window.location.host)  // Add origin
           .build();
         picker.setVisible(true);
       } catch (e) {
@@ -247,12 +272,40 @@ function pickerCallback(data) {
 
 // Initialize Google API
 function initGoogleApi() {
-  // Load the Google API
-  const script = document.createElement('script');
-  script.src = 'https://apis.google.com/js/api.js?onload=loadPicker';
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
+  // First, try to get configuration from server
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(config) {
+        if (config && config.enabled) {
+          // Update local config with server values
+          GOOGLE_PICKER_CONFIG.API_KEY = config.apiKey;
+          GOOGLE_PICKER_CONFIG.APP_ID = config.appId;
+          GOOGLE_PICKER_CONFIG.ENABLED = true;
+          
+          // Load the Google API
+          const script = document.createElement('script');
+          script.src = 'https://apis.google.com/js/api.js?onload=loadPicker';
+          script.async = true;
+          script.defer = true;
+          document.head.appendChild(script);
+        } else {
+          console.log('Google Picker not configured on server');
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error('Error getting picker config:', error);
+      })
+      .getPickerConfig();
+  } else {
+    // If not in Apps Script environment, check local config
+    if (GOOGLE_PICKER_CONFIG.ENABLED) {
+      const script = document.createElement('script');
+      script.src = 'https://apis.google.com/js/api.js?onload=loadPicker';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }
 }
 
 // Show snackbar function (for use within picker functions)

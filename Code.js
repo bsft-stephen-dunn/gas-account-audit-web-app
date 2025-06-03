@@ -81,6 +81,39 @@ function getUserEmail() {
   return Session.getActiveUser().getEmail();
 }
 
+// Get Google Picker configuration from Script Properties
+// This is more secure than hardcoding credentials in client-side code
+function getPickerConfig() {
+  try {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    const apiKey = scriptProperties.getProperty('GOOGLE_PICKER_API_KEY');
+    const appId = scriptProperties.getProperty('GOOGLE_PICKER_APP_ID');
+    
+    // Only return config if both values are set
+    if (apiKey && appId) {
+      return {
+        apiKey: apiKey,
+        appId: appId,
+        enabled: true
+      };
+    }
+    
+    // Return disabled config if credentials not set
+    return {
+      apiKey: '',
+      appId: '',
+      enabled: false
+    };
+  } catch (e) {
+    console.error('Error getting picker config:', e);
+    return {
+      apiKey: '',
+      appId: '',
+      enabled: false
+    };
+  }
+}
+
 // Get list of folders for dropdown selection (fallback method)
 function getUserFolders() {
   try {
